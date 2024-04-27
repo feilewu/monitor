@@ -35,6 +35,9 @@ private [netty] case class RpcMessage(
       content: Any,
       context: RpcCallContext) extends InboxMessage
 
+private[netty] case class OneWayMessage(senderAddress: RpcAddress,
+                                         content: Any) extends InboxMessage
+
 private[netty] case object OnStop extends InboxMessage
 
 private[netty] class Inbox(val endpointName: String, val endpoint: RpcEndpoint) extends Logging{
@@ -95,6 +98,16 @@ private[netty] class Inbox(val endpointName: String, val endpoint: RpcEndpoint) 
     while (true) {
       safelyCall(endpoint) {
         message match {
+          case OneWayMessage(_sender, content) =>
+            try {
+              endpoint.receive.applyOrElse[Any, Unit](content, { msg =>
+                throw new MonitorException(s"Unsupported message $message from ${_sender}")
+              })
+            } catch {
+              case e: Throwable =>
+                throw e
+            }
+
           case RpcMessage(_sender, content, context) =>
             try {
               endpoint.receiveAndReply(context).applyOrElse[Any, Unit](content, { msg =>

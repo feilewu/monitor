@@ -83,6 +83,13 @@ private [rpc] final class Dispatcher(private val nettyEnv: NettyRpcEnv) {
     postMessage(message.receiver.name, rpcMessage, (e) => p.tryFailure(e))
   }
 
+  /** Posts a one-way message. */
+  def postOneWayMessage(message: RequestMessage): Unit = {
+    postMessage(message.receiver.name, OneWayMessage(message.senderAddress, message.content),
+      {
+        case e => throw e
+      })
+  }
 
   /** Posts a message sent by a remote endpoint. */
   def postRemoteMessage(message: RequestMessage, callback: RpcResponseCallback): Unit = {

@@ -1,4 +1,4 @@
-/*
+package com.github.feilewu.monitor.network.protocol;/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -15,14 +15,38 @@
  * limitations under the License.
  */
 
-package com.github.feilewu.monitor.agent;
+import com.github.feilewu.monitor.network.buffer.ManagedBuffer;
+import com.github.feilewu.monitor.network.buffer.NioManagedBuffer;
+import io.netty.buffer.ByteBuf;
 
 /**
  * @Author: pf_xu
- * @Date: 2024/4/13 23:39
+ * @Date: 2024/4/27 21:00
  * @email：pfxuchn@gmail.com
  */
-public class Agent {
+public class OneWayMessage extends RequestMessage{
+    public OneWayMessage(ManagedBuffer body) {
+        super(body);
+    }
 
+    @Override
+    public int encodedLength() {
+        return 4;
+    }
+
+    @Override
+    public void encode(ByteBuf buf) {
+        buf.writeInt((int) body().size());
+    }
+
+    @Override
+    public Type type() {
+        return Type.OneWayMessage;
+    }
+
+    public static OneWayMessage decode(ByteBuf buf) {
+        // See comment in encodedLength().
+        buf.readInt();
+        return new OneWayMessage(new NioManagedBuffer(buf.nioBuffer()));
+    }
 }
-

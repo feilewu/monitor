@@ -48,6 +48,10 @@ private [rpc] abstract class RpcEndpointRef {
    */
   def address: RpcAddress
 
+  /**
+   * Sends a one-way asynchronous message. Fire-and-forget semantics.
+   */
+  def send(message: Any): Unit
 
   def ask[T: ClassTag](message: Any, timeout: RpcTimeout): Future[T]
 

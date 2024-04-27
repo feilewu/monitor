@@ -1,12 +1,15 @@
 package com.github.feilewu.network;
 
 import com.github.feilewu.monitor.network.TransportContext;
+import com.github.feilewu.monitor.network.client.RpcResponseCallback;
 import com.github.feilewu.monitor.network.client.TransportClient;
+import com.github.feilewu.monitor.network.server.RpcHandler;
 import com.github.feilewu.monitor.network.server.TransportServer;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
@@ -34,7 +37,12 @@ class TransportContextTest {
 
     @Test
     void testTransport() throws IOException, InterruptedException {
-        TransportContext context = new TransportContext((client, message, callback) -> {});
+        TransportContext context = new TransportContext(new RpcHandler() {
+            @Override
+            protected void receive(TransportClient client, ByteBuffer message, RpcResponseCallback callback) {
+
+            }
+        });
         TransportServer transportServer = context.createTransportServer();
         transportServer.bind("localhost", 10010);
         TransportClient client = context.createClient(new InetSocketAddress("localhost", 10010));

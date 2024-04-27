@@ -27,6 +27,7 @@ import java.util.concurrent.Callable
 import scala.util.control.NonFatal
 
 import com.github.feilewu.monitor.core.exception.MonitorException
+import com.github.feilewu.monitor.core.log.Logging
 import com.github.feilewu.monitor.core.rpc.RpcAddress
 import com.github.feilewu.monitor.network.client.{RpcResponseCallback, TransportClient}
 
@@ -78,7 +79,18 @@ private[netty] case class RpcOutboxMessage(
 
 }
 
+private[netty] case class OneWayOutboxMessage(content: ByteBuffer)
+  extends OutboxMessage with Logging {
+  override def sendWith(client: TransportClient): Unit = {
+    client.send(content)
+  }
 
+  override def onFailure(e: Throwable): Unit = {
+    e match {
+      case e1: Throwable => logWarning(s"Failed to send one-way RPC.", e1)
+    }
+  }
+}
 
 private [monitor] class Outbox(nettyEnv: NettyRpcEnv, val rpcAddress: RpcAddress) {
 

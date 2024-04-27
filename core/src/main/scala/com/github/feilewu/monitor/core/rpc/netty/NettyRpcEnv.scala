@@ -32,6 +32,7 @@ import scala.util.{Failure, Success, Try}
 
 import com.github.feilewu.monitor.core.ThreadUtils
 import com.github.feilewu.monitor.core.conf.MonitorConf
+import com.github.feilewu.monitor.core.log.Logging
 import com.github.feilewu.monitor.core.rpc._
 import com.github.feilewu.monitor.core.serializer._
 import com.github.feilewu.monitor.network.TransportContext
@@ -39,7 +40,7 @@ import com.github.feilewu.monitor.network.client.TransportClient
 import com.github.feilewu.monitor.network.server.TransportServer
 
 private [netty] class NettyRpcEnv(val host: String, val conf: MonitorConf)
-  extends RpcEnv {
+  extends RpcEnv with Logging {
 
   private val javaSerializerInstance: JavaSerializerInstance =
     new JavaSerializer().newInstance().asInstanceOf[JavaSerializerInstance]
@@ -97,6 +98,20 @@ private [netty] class NettyRpcEnv(val host: String, val conf: MonitorConf)
     }(ThreadUtils.sameThread)
   }
 
+  private[netty] def send(message: RequestMessage): Unit = {
+    val remoteAddr = message.receiver.address
+    if (remoteAddr == address) {
+      // Message to a local RPC endpoint.
+      try {
+        dispatcher.postOneWayMessage(message)
+      } catch {
+        case e: Exception => logDebug(e.getMessage, e)
+      }
+    } else {
+      // Message to a remote RPC endpoint.
+      postToOutbox(message.receiver, OneWayOutboxMessage(message.serialize(this)))
+    }
+  }
   protected[netty] def ask[T: ClassTag](message: RequestMessage, timeout: RpcTimeout): Future[T] = {
     val promise = Promise[Any]()
     val remoteAddr = message.receiver.address

@@ -42,6 +42,8 @@ public class MessageDecoder extends MessageToMessageDecoder<ByteBuf> {
                 return RpcRequest.decode(buf);
             case RpcResponse:
                 return RpcResponse.decode(buf);
+            case OneWayMessage:
+                return OneWayMessage.decode(buf);
             default: throw new IllegalArgumentException("Unknown type: " + type.id());
         }
     }

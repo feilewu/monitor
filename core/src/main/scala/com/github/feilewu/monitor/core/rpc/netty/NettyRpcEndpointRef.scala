@@ -45,4 +45,8 @@ private [rpc] class NettyRpcEndpointRef(private val nettyEnv: NettyRpcEnv,
   }
 
   override def rpcEnv: RpcEnv = nettyEnv
+
+  override def send(message: Any): Unit = {
+    nettyEnv.send(new RequestMessage(nettyEnv.address, this, message))
+  }
 }

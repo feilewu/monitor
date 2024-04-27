@@ -17,6 +17,7 @@ package com.github.feilewu.monitor.network.client;
  */
 
 import com.github.feilewu.monitor.network.buffer.NioManagedBuffer;
+import com.github.feilewu.monitor.network.protocol.OneWayMessage;
 import com.github.feilewu.monitor.network.protocol.RpcRequest;
 import io.netty.channel.Channel;
 import io.netty.util.concurrent.Future;
@@ -59,6 +60,10 @@ public class TransportClient {
         RpcChannelListener rpcChannelListener = new RpcChannelListener(requestId, callback);
         channel.writeAndFlush(rpcRequest).addListener(rpcChannelListener);
         return requestId;
+    }
+
+    public void send(ByteBuffer message) {
+        channel.writeAndFlush(new OneWayMessage(new NioManagedBuffer(message)));
     }
 
     private static long requestId() {

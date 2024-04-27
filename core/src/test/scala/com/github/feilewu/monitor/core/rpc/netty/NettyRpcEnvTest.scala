@@ -21,8 +21,10 @@
  */
 package com.github.feilewu.monitor.core.rpc.netty
 
-import org.scalatest.funsuite.AnyFunSuite
+import java.util.concurrent.{CountDownLatch, TimeUnit}
+import java.util.concurrent.atomic.AtomicReference
 
+import org.scalatest.funsuite.AnyFunSuite
 import com.github.feilewu.monitor.core.conf.MonitorConf
 import com.github.feilewu.monitor.core.rpc.{RpcAddress, RpcCallContext, RpcEndpoint, RpcEnv}
 
@@ -71,6 +73,31 @@ class NettyRpcEnvTest extends AnyFunSuite {
 
   }
 
+  test("test oneway message") {
+    val conf = new MonitorConf
+    val env = NettyRpcEnv.createNettyRpcEnv("localhost", conf)
+    env.startServer(10021)
+    val countDownLatch = new CountDownLatch(1)
+    val msgRef = new AtomicReference[String]
+    val endpoint = new RpcEndpoint {
+      override def rpcEnv: RpcEnv = {
+        env
+      }
+      override def receive: PartialFunction[Any, Unit] = {
+        case SayRequest(msg) =>
+          msgRef.set(msg)
+          countDownLatch.countDown()
+      }
+    }
+    env.setupEndpoint("oneWayMessageEndpoint", endpoint)
+    val demoEndpointRef = env.setupEndpointRef(RpcAddress("localhost", 10021),
+      "oneWayMessageEndpoint")
+    demoEndpointRef.send(SayRequest("Hello, server!"))
+    countDownLatch.await(10, TimeUnit.SECONDS)
+    assert("Hello, server!".equals(msgRef.get()))
+    env.shutdown()
+
+  }
 
 
 }

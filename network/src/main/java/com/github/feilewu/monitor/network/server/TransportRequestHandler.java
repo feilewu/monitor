@@ -70,6 +70,8 @@ public class TransportRequestHandler extends MessageHandler<RequestMessage> {
             });
 
 
+        } else if (message instanceof OneWayMessage) {
+            rpcHandler.receive(reverseClient, message.body().nioByteBuffer());
         }
 
 

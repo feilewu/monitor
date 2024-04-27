@@ -49,6 +49,9 @@ private [monitor] trait Logging {
     _log.warn(msg)
   }
 
+  protected def logWarning(msg: String, e: Throwable): Unit = {
+    _log.warn(msg, e)
+  }
 
   protected def logError(msg: String): Unit = {
     _log.error(msg)

@@ -18,6 +18,8 @@ package com.github.feilewu.monitor.network.server;
 
 import com.github.feilewu.monitor.network.client.RpcResponseCallback;
 import com.github.feilewu.monitor.network.client.TransportClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
 
@@ -26,8 +28,8 @@ import java.nio.ByteBuffer;
  * @Date: 2024/4/16 0:09
  * @email：pfxuchn@gmail.com
  */
-public interface RpcHandler {
-
+public abstract class RpcHandler {
+    private final OneWayRpcCallback ONE_WAY_RPC_CALLBACK = new OneWayRpcCallback();
     /**
      * Receive a single RPC message. Any exception thrown while in this method will be sent back to
      * the client in string form as a standard RPC failure.
@@ -41,11 +43,32 @@ public interface RpcHandler {
      * @param callback Callback which should be invoked exactly once upon success or failure of the
      *                 RPC.
      */
-    void receive(
+    protected abstract void receive(
             TransportClient client,
             ByteBuffer message,
             RpcResponseCallback callback);
 
 
+    protected void receive(TransportClient client, ByteBuffer message) {
+        receive(client, message, ONE_WAY_RPC_CALLBACK);
+    }
+
+    private static final class OneWayRpcCallback implements RpcResponseCallback {
+
+        private static final Logger logger = LoggerFactory.getLogger(OneWayRpcCallback.class);
+
+        @Override
+        public void onSuccess(ByteBuffer response) {
+            logger.warn("Response provided for one-way RPC.");
+        }
+
+        @Override
+        public void onFailure(Throwable e) {
+            logger.error("Error response provided for one-way RPC.", e);
+        }
+
+    }
 
 }
+
+
