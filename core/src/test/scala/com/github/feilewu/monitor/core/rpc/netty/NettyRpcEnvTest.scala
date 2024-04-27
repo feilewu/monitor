@@ -57,7 +57,18 @@ class NettyRpcEnvTest extends AnyFunSuite {
     
   }
 
+  test("test local message") {
+    val conf = new MonitorConf
+    val env = NettyRpcEnv.createNettyRpcEnv("localhost", conf)
+    env.startServer(10020)
+    val endpoint = new DemoEndpoint(env)
+    env.setupEndpoint("demoEndpoint", endpoint)
+    val demoEndpointRef = endpoint.self
+    val response = demoEndpointRef.askSync[SayResponse](SayRequest("Hello, server!"))
+    assert(response.msg != null && response.msg.contains("Hello, server!"))
+    env.shutdown()
 
+  }
 
 
 

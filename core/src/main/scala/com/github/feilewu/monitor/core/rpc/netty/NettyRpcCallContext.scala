@@ -21,6 +21,8 @@
  */
 package com.github.feilewu.monitor.core.rpc.netty
 
+import scala.concurrent.Promise
+
 import com.github.feilewu.monitor.core.rpc.{RpcAddress, RpcCallContext}
 import com.github.feilewu.monitor.network.client.RpcResponseCallback
 
@@ -58,5 +60,17 @@ private[netty] class RemoteNettyRpcCallContext(
   override protected def send(message: Any): Unit = {
     val reply = nettyEnv.serialize(message)
     callback.onSuccess(reply)
+  }
+}
+
+/**
+ * If the sender and the receiver are in the same process, the reply can be sent back via `Promise`.
+ */
+private[netty] class LocalNettyRpcCallContext(senderAddress: RpcAddress,
+                                               p: Promise[Any])
+  extends NettyRpcCallContext(senderAddress) {
+
+  override protected def send(message: Any): Unit = {
+    p.success(message)
   }
 }

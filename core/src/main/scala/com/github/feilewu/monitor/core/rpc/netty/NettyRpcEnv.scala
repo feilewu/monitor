@@ -28,7 +28,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 import scala.concurrent.{Future, Promise, TimeoutException}
 import scala.reflect.ClassTag
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 
 import com.github.feilewu.monitor.core.ThreadUtils
 import com.github.feilewu.monitor.core.conf.MonitorConf
@@ -76,7 +76,7 @@ private [netty] class NettyRpcEnv(val host: String, val conf: MonitorConf)
   }
 
   override private[rpc] def endpointRef(endpoint: RpcEndpoint): RpcEndpointRef = {
-    null
+    dispatcher.getRpcEndpointRef(endpoint)
   }
 
   override def setupEndpoint(name: String, endpoint: RpcEndpoint): RpcEndpointRef = {
@@ -115,15 +115,25 @@ private [netty] class NettyRpcEnv(val host: String, val conf: MonitorConf)
 
         }
     }
-    val rpcMessage = RpcOutboxMessage(message.serialize(this),
-      onFailure,
-      (client, response) => onSuccess(deserialize[Any](response)))
-    rpcMsg = Option(rpcMessage)
-    postToOutbox(message.receiver, rpcMessage)
-    promise.future.failed.foreach {
-      case _: TimeoutException =>
-      case _ =>
-    }(ThreadUtils.sameThread)
+    if (address == remoteAddr) {
+      val p = Promise[Any]()
+      p.future.onComplete {
+        case Success(response) => onSuccess(response)
+        case Failure(e) => onFailure(e)
+      }(ThreadUtils.sameThread)
+      dispatcher.postLocalMessage(message, p)
+    } else {
+      val rpcMessage = RpcOutboxMessage(message.serialize(this),
+        onFailure,
+        (client, response) => onSuccess(deserialize[Any](response)))
+      rpcMsg = Option(rpcMessage)
+      postToOutbox(message.receiver, rpcMessage)
+      promise.future.failed.foreach {
+        case _: TimeoutException =>
+        case _ =>
+      }(ThreadUtils.sameThread)
+    }
+
     val timeoutCancelable = timeoutScheduler.schedule(new Runnable {
       override def run(): Unit = {
         val remoteRecAddr = if (remoteAddr == null) {

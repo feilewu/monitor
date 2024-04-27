@@ -23,6 +23,7 @@ package com.github.feilewu.monitor.core.rpc.netty
 
 import java.util.concurrent.{ConcurrentHashMap, ConcurrentMap}
 
+import scala.concurrent.Promise
 import scala.jdk.CollectionConverters.ConcurrentMapHasAsScala
 import scala.util.control.NonFatal
 
@@ -71,6 +72,16 @@ private [rpc] final class Dispatcher(private val nettyEnv: NettyRpcEnv) {
   }
 
   def removeRpcEndpointRef(endpoint: RpcEndpoint): Unit = endpointRefs.remove(endpoint)
+
+  def getRpcEndpointRef(endpoint: RpcEndpoint): RpcEndpointRef = endpointRefs.get(endpoint)
+
+  /** Posts a message sent by a local endpoint. */
+  def postLocalMessage(message: RequestMessage, p: Promise[Any]): Unit = {
+    val rpcCallContext =
+      new LocalNettyRpcCallContext(message.senderAddress, p)
+    val rpcMessage = RpcMessage(message.senderAddress, message.content, rpcCallContext)
+    postMessage(message.receiver.name, rpcMessage, (e) => p.tryFailure(e))
+  }
 
 
   /** Posts a message sent by a remote endpoint. */
