@@ -21,9 +21,10 @@
  */
 package com.github.feilewu.monitor.core.rpc.netty
 
+import org.scalatest.funsuite.AnyFunSuite
+
 import com.github.feilewu.monitor.core.conf.MonitorConf
 import com.github.feilewu.monitor.core.rpc.{RpcAddress, RpcCallContext, RpcEndpoint, RpcEnv}
-import org.scalatest.funsuite.AnyFunSuite
 
 case class SayRequest(msg: String)
 
