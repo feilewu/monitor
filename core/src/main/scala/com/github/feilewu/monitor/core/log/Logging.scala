@@ -41,28 +41,32 @@ private [monitor] trait Logging {
   }
 
 
-  protected def logInfo(msg: String): Unit = {
-    _log.info(msg)
+  protected[monitor] def logInfo(msg: String): Unit = {
+    log.info(msg)
+  }
+
+  protected[monitor] def logInfo(msg: String, e: Throwable): Unit = {
+    log.info(msg, e)
   }
 
   protected def logWarning(msg: String): Unit = {
-    _log.warn(msg)
+    log.warn(msg)
   }
 
   protected def logWarning(msg: String, e: Throwable): Unit = {
-    _log.warn(msg, e)
+    log.warn(msg, e)
   }
 
   protected def logError(msg: String): Unit = {
-    _log.error(msg)
+    log.error(msg)
   }
 
   protected def logError(msg: String, e: Throwable): Unit = {
-    _log.error(msg, e)
+    log.error(msg, e)
   }
 
   protected def logDebug(msg: String, e: Throwable): Unit = {
-    _log.debug(msg, e)
+    log.debug(msg, e)
   }
 
 }

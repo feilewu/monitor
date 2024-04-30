@@ -16,30 +16,16 @@
  */
 /**
  * @Author: pf_xu
- * @Date: 2024/4/27 8:57
+ * @Date: 2024/4/28 21:12
  * @email：pfxuchn@gmail.com
  */
 package com.github.feilewu.monitor.core.conf.config
 
-import java.util.concurrent.TimeUnit
+private[monitor] object Config {
 
-private[monitor] object Network {
-
-
-  private[monitor] val NETWORK_TIMEOUT =
-    ConfigBuilder("monitor.network.timeout")
-      .timeConf(TimeUnit.SECONDS)
-      .createWithDefaultString("120s")
-
-  private[monitor] val MONITOR_NETWORK_RPC_CONNECT_TIMEOUT =
-    ConfigBuilder("monitor.network.rpc.connect.timeout")
-      .timeConf(TimeUnit.SECONDS)
-      .createWithDefaultString("10s")
-
-  private[monitor] val MONITOR_NETWORK_RPC_AWAIT_TIMEOUT =
-    ConfigBuilder("monitor.network.rpc.await.timeout")
-      .timeConf(TimeUnit.SECONDS)
-      .createWithDefaultString("30s")
+  private[monitor] val MONITOR_MASTER = ConfigBuilder("monitor.master")
+    .stringConf()
+    .createWithDefault("monitor://127.0.0.1:7077")
 
 
 }

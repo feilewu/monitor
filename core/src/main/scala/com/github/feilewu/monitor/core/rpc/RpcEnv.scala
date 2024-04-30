@@ -59,6 +59,7 @@ private [monitor] abstract class RpcEnv {
     setupEndpointRefByURI(RpcEndpointAddress(address, endpointName).toString)
   }
 
+  def awaitTermination(): Unit
 
 }
 

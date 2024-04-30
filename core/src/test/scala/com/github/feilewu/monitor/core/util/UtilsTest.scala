@@ -14,32 +14,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /**
  * @Author: pf_xu
- * @Date: 2024/4/27 8:57
+ * @Date: 2024/4/29 21:03
  * @email：pfxuchn@gmail.com
  */
-package com.github.feilewu.monitor.core.conf.config
+package com.github.feilewu.monitor.core.util
 
-import java.util.concurrent.TimeUnit
+import org.scalatest.funsuite.AnyFunSuite
 
-private[monitor] object Network {
+import com.github.feilewu.monitor.core.rpc.RpcAddress
 
 
-  private[monitor] val NETWORK_TIMEOUT =
-    ConfigBuilder("monitor.network.timeout")
-      .timeConf(TimeUnit.SECONDS)
-      .createWithDefaultString("120s")
 
-  private[monitor] val MONITOR_NETWORK_RPC_CONNECT_TIMEOUT =
-    ConfigBuilder("monitor.network.rpc.connect.timeout")
-      .timeConf(TimeUnit.SECONDS)
-      .createWithDefaultString("10s")
+class UtilsTest extends AnyFunSuite{
 
-  private[monitor] val MONITOR_NETWORK_RPC_AWAIT_TIMEOUT =
-    ConfigBuilder("monitor.network.rpc.await.timeout")
-      .timeConf(TimeUnit.SECONDS)
-      .createWithDefaultString("30s")
+  test("parseMasterUrls") {
+    val masterUrls1 = "monitor://10.10.10.10:1000,10.10.10.9:1001"
+    val defined = Utils.parseMasterUrls(masterUrls1)
+      .contains(RpcAddress("10.10.10.9", 1001))
+    assert(defined)
+
+  }
 
 
 }

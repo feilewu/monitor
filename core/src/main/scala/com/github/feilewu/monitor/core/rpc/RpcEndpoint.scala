@@ -55,6 +55,10 @@ private [monitor] trait RpcEndpoint {
     throw cause
   }
 
+  def onStart(): Unit = {
+    // By default, do nothing.
+  }
+
   def onStop(): Unit = {
     // By default, do nothing.
   }

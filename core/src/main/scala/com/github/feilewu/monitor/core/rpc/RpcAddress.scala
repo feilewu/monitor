@@ -22,4 +22,6 @@
  */
 package com.github.feilewu.monitor.core.rpc
 
-private [monitor] case class RpcAddress(host: String, port: Int)
+private [monitor] case class RpcAddress(host: String, port: Int) {
+  override def toString: String = s"$host:$port"
+}

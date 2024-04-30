@@ -86,8 +86,8 @@ private [netty] class NettyRpcEnv(val host: String, val conf: MonitorConf)
 
   override def asyncSetupEndpointRefByURI(uri: String): Future[RpcEndpointRef] = {
     val address = RpcEndpointAddress(uri)
-    val endpointRef = new NettyRpcEndpointRef(this, address)
-    val verifier = new NettyRpcEndpointRef(this,
+    val endpointRef = new NettyRpcEndpointRef(this, this.conf, address)
+    val verifier = new NettyRpcEndpointRef(this, this.conf,
       RpcEndpointAddress(address.rpcAddress, RpcEndpointVerifier.NAME))
     verifier.ask[Boolean](RpcEndpointVerifier.CheckExistence(endpointRef.name)).flatMap { find =>
       if (find) {
@@ -96,6 +96,10 @@ private [netty] class NettyRpcEnv(val host: String, val conf: MonitorConf)
         Future.failed(new RpcEndpointNotFoundException(uri))
       }
     }(ThreadUtils.sameThread)
+  }
+
+  override def awaitTermination(): Unit = {
+    dispatcher.awaitTermination()
   }
 
   private[netty] def send(message: RequestMessage): Unit = {
@@ -301,7 +305,7 @@ private[netty] object RequestMessage {
     try {
       val senderAddress = readRpcAddress(in)
       val endpointAddress = RpcEndpointAddress(readRpcAddress(in), in.readUTF())
-      val ref = new NettyRpcEndpointRef(nettyEnv, endpointAddress)
+      val ref = new NettyRpcEndpointRef(nettyEnv, nettyEnv.conf, endpointAddress)
       ref.client = client
       new RequestMessage(
         senderAddress,

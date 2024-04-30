@@ -21,7 +21,7 @@
  */
 package com.github.feilewu.monitor.core.rpc.netty
 
-import java.util.concurrent.{ConcurrentHashMap, ConcurrentMap}
+import java.util.concurrent.{ConcurrentHashMap, ConcurrentMap, CountDownLatch}
 
 import scala.concurrent.Promise
 import scala.jdk.CollectionConverters.ConcurrentMapHasAsScala
@@ -44,9 +44,11 @@ private [rpc] final class Dispatcher(private val nettyEnv: NettyRpcEnv) {
 
   private lazy val sharedLoop = new SharedMessageLoop(this, 5)
 
+  private val shutdownLatch = new CountDownLatch(1)
+
   def registerEndpoint(name: String, endpoint: RpcEndpoint): NettyRpcEndpointRef = {
     val addr = RpcEndpointAddress(nettyEnv.address, name)
-    val endpointRef = new NettyRpcEndpointRef(nettyEnv, addr)
+    val endpointRef = new NettyRpcEndpointRef(nettyEnv, nettyEnv.conf, addr)
     if (stopped) {
       throw new IllegalStateException("RpcEnv has been stopped")
     }
@@ -156,6 +158,11 @@ private [rpc] final class Dispatcher(private val nettyEnv: NettyRpcEnv) {
     if (stopSharedLoop) {
       sharedLoop.stop()
     }
+    shutdownLatch.countDown()
+  }
+
+  def awaitTermination(): Unit = {
+    shutdownLatch.await()
   }
 
 }

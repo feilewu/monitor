@@ -32,7 +32,6 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder
 
 private [monitor] object ThreadUtils {
 
-
   def sameThread: ExecutionContextExecutor = sameThreadExecutionContext
 
   private val sameThreadExecutionContext =

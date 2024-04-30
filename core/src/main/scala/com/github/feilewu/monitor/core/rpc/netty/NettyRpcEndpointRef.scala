@@ -24,14 +24,16 @@ package com.github.feilewu.monitor.core.rpc.netty
 import scala.concurrent.Future
 import scala.reflect.ClassTag
 
+import com.github.feilewu.monitor.core.conf.MonitorConf
 import com.github.feilewu.monitor.core.rpc.{RpcAddress, RpcEndpointAddress, RpcEndpointRef, RpcEnv, RpcTimeout}
 import com.github.feilewu.monitor.network.client.TransportClient
 
-private [rpc] class NettyRpcEndpointRef(private val nettyEnv: NettyRpcEnv,
+private [monitor] class NettyRpcEndpointRef(@transient private val nettyEnv: NettyRpcEnv,
+                                            @transient val conf: MonitorConf,
                                         private val endpointAddress: RpcEndpointAddress)
-  extends RpcEndpointRef {
+  extends RpcEndpointRef(conf) {
 
-  var client: TransportClient = _
+  @transient var client: TransportClient = _
 
   override def name: String = endpointAddress.name
 

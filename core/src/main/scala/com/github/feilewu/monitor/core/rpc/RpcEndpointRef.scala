@@ -29,14 +29,17 @@ import scala.concurrent.Future
 import scala.concurrent.duration.FiniteDuration
 import scala.reflect.ClassTag
 
+import com.github.feilewu.monitor.core.conf.MonitorConf
 import com.github.feilewu.monitor.core.conf.config.Network
 
-private [rpc] abstract class RpcEndpointRef {
+private [monitor] abstract class RpcEndpointRef(conf: MonitorConf) extends Serializable {
+
+  protected val serialVersionUID = 1631280650588763177L
 
   private[this] val defaultAskTimeout =
     new RpcTimeout(
       new FiniteDuration(
-        rpcEnv.conf.get(Network.MONITOR_NETWORK_RPC_AWAIT_TIMEOUT), TimeUnit.SECONDS),
+        conf.get(Network.MONITOR_NETWORK_RPC_AWAIT_TIMEOUT), TimeUnit.SECONDS),
       "defaultAskTimeout")
 
   def rpcEnv: RpcEnv
