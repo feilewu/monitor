@@ -65,6 +65,10 @@ private [monitor] trait Logging {
     log.error(msg, e)
   }
 
+  protected def logDebug(msg: String): Unit = {
+    log.debug(msg)
+  }
+
   protected def logDebug(msg: String, e: Throwable): Unit = {
     log.debug(msg, e)
   }

@@ -21,12 +21,13 @@
  */
 package com.github.feilewu.monitor.core.util
 
+import scala.tools.nsc.doc.base.comment.Block
 import scala.util.control.NonFatal
 
 import com.github.feilewu.monitor.core.log.Logging
 import com.github.feilewu.monitor.core.rpc.RpcAddress
 
-private[monitor] object Utils {
+private[monitor] object Utils extends Logging {
 
 
   def parseMasterUrls(masterUrls: String): Seq[RpcAddress] = {
@@ -51,6 +52,20 @@ private[monitor] object Utils {
       block
     } catch {
       case NonFatal(e) => logging.logInfo(s"Catch exception: ${e.getMessage}", e)
+    }
+  }
+
+  def tryLogNonFatal(block: => Any): Unit = {
+    try {
+      block
+    } catch {
+      case NonFatal(e) => logInfo(s"Catch exception: ${e.getMessage}", e)
+    }
+  }
+
+  def require (block: => Boolean): Unit = {
+    if (!block) {
+      throw new IllegalArgumentException(s"${block} should be true")
     }
   }
 

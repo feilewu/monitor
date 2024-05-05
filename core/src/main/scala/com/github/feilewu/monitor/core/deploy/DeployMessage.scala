@@ -21,11 +21,11 @@
  */
 package com.github.feilewu.monitor.core.deploy
 
-import com.github.feilewu.monitor.core.rpc.RpcEndpointRef
-
-
+import com.github.feilewu.monitor.core.rpc.{RpcAddress, RpcEndpointRef}
 case class RegisterAgent(cores: String, memory: String,
                          agentRef: RpcEndpointRef) extends DeployMessage
 
 
 class DeployMessage extends Serializable
+
+case class HeartBeat(rpcAddress: RpcAddress) extends DeployMessage

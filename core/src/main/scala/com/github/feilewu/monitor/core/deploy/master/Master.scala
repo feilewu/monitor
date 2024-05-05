@@ -22,15 +22,23 @@
 package com.github.feilewu.monitor.core.deploy.master
 
 import java.util
+import java.util.concurrent.TimeUnit
 
+import com.github.feilewu.monitor.core.ThreadUtils
 import com.github.feilewu.monitor.core.conf.MonitorConf
-import com.github.feilewu.monitor.core.deploy.RegisterAgent
+import com.github.feilewu.monitor.core.deploy.{HeartBeat, RegisterAgent}
 import com.github.feilewu.monitor.core.deploy.agent.AgentInfo
 import com.github.feilewu.monitor.core.log.Logging
 import com.github.feilewu.monitor.core.rpc.{RpcAddress, RpcCallContext, RpcEndpoint, RpcEnv}
 import com.github.feilewu.monitor.core.rpc.netty.NettyRpcEnv
+import com.github.feilewu.monitor.core.util.Utils
 
 private[deploy] class Master(val rpcEnv: RpcEnv) extends RpcEndpoint with Logging {
+
+  private val lastHeartBeatOfAgent = new util.HashMap[RpcAddress, Long]()
+
+  private val agentHeartBeat = ThreadUtils
+    .newDaemonSingleThreadScheduledExecutor("heart-beat-thread")
 
   private val addressToAgent = new util.HashMap[RpcAddress, AgentInfo]()
 
@@ -43,6 +51,7 @@ private[deploy] class Master(val rpcEnv: RpcEnv) extends RpcEndpoint with Loggin
       val address = agentRef.address
       val agentInfo = new AgentInfo("", address.host, address.port, cores, memory, agentRef)
       addressToAgent.put(address, agentInfo)
+      lastHeartBeatOfAgent.put(address, System.currentTimeMillis())
       logInfo(s"registered agent: ${address}")
       context.reply(true)
   }
@@ -54,10 +63,29 @@ private[deploy] class Master(val rpcEnv: RpcEnv) extends RpcEndpoint with Loggin
    */
   override def receive: PartialFunction[Any, Unit] = {
     case OnStart => onStart()
-
+    case HeartBeat(rpcAddress) =>
+      val lastTime: Long = lastHeartBeatOfAgent.get(rpcAddress)
+      Utils.require(lastTime != 0)
+      lastHeartBeatOfAgent.put(rpcAddress, System.currentTimeMillis())
   }
 
 
+  override def onStart(): Unit = {
+    agentHeartBeat.scheduleAtFixedRate(() => {
+      Utils.tryLogNonFatal({
+        logInfo("Start checking whether the agent is alive.")
+        lastHeartBeatOfAgent.synchronized {
+          lastHeartBeatOfAgent.forEach((address, time) => {
+            if (System.currentTimeMillis() - time > 1 * 60 * 1000) {
+              lastHeartBeatOfAgent.remove(address)
+              addressToAgent.remove(address)
+              logInfo(s"Agent ${address} has been removed from master!")
+            }
+          })
+        }
+      })
+    }, 0, 60, TimeUnit.SECONDS)
+  }
 }
 
 private[master] object OnStart
@@ -69,7 +97,8 @@ private[monitor] object Master {
     val conf = new MonitorConf
     val env = NettyRpcEnv.createNettyRpcEnv("localhost", conf)
     env.startServer(7077)
-    env.setupEndpoint(Master.NAME, new Master(env))
+    val endpointRef = env.setupEndpoint(Master.NAME, new Master(env))
+    endpointRef.send(OnStart)
     env.awaitTermination()
   }
 

@@ -30,6 +30,7 @@ import scala.util.control.NonFatal
 import com.github.feilewu.monitor.core.exception.MonitorException
 import com.github.feilewu.monitor.core.rpc.{RpcEndpoint, RpcEndpointAddress, RpcEndpointRef}
 import com.github.feilewu.monitor.network.client.RpcResponseCallback
+import com.github.feilewu.monitor.network.server.RpcHandler.OneWayRpcCallback
 
 private [rpc] final class Dispatcher(private val nettyEnv: NettyRpcEnv) {
 
@@ -97,8 +98,13 @@ private [rpc] final class Dispatcher(private val nettyEnv: NettyRpcEnv) {
   def postRemoteMessage(message: RequestMessage, callback: RpcResponseCallback): Unit = {
     val rpcCallContext =
       new RemoteNettyRpcCallContext(nettyEnv, callback, message.senderAddress)
-    val rpcMessage = RpcMessage(message.senderAddress, message.content, rpcCallContext)
-    postMessage(message.receiver.name, rpcMessage, (e) => callback.onFailure(e))
+    var requestMessage: InboxMessage = null
+    if (callback.isInstanceOf[OneWayRpcCallback]) {
+      requestMessage = OneWayMessage(message.senderAddress, message.content)
+    } else {
+      requestMessage = RpcMessage(message.senderAddress, message.content, rpcCallContext)
+    }
+    postMessage(message.receiver.name, requestMessage, (e) => callback.onFailure(e))
   }
 
   private def postMessage(

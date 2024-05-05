@@ -21,12 +21,12 @@
  */
 package com.github.feilewu.monitor.core.deploy.agent
 
-import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.{ScheduledExecutorService, ThreadPoolExecutor, TimeUnit}
 
 import com.github.feilewu.monitor.core.ThreadUtils
 import com.github.feilewu.monitor.core.conf.MonitorConf
 import com.github.feilewu.monitor.core.conf.config.Config
-import com.github.feilewu.monitor.core.deploy.RegisterAgent
+import com.github.feilewu.monitor.core.deploy.{HeartBeat, RegisterAgent}
 import com.github.feilewu.monitor.core.deploy.master.Master
 import com.github.feilewu.monitor.core.log.Logging
 import com.github.feilewu.monitor.core.rpc._
@@ -41,6 +41,9 @@ private[deploy] class Agent(val rpcEnv: RpcEnv)
   private val agentExecutors: ThreadPoolExecutor =
     ThreadUtils.newDaemonFixedThreadPool(3, "agent-executor-thread")
 
+  private val heartBeatScheduledExecutorService: ScheduledExecutorService =
+    ThreadUtils.newDaemonSingleThreadScheduledExecutor("heartbeat-thread")
+
 
   override def receive: PartialFunction[Any, Unit] = {
     case OnStart => onStart()
@@ -54,6 +57,10 @@ private[deploy] class Agent(val rpcEnv: RpcEnv)
           System.exit(-1)
         } else {
           logInfo(s"Register to master ${masterRef.address} successfully!")
+          heartBeatScheduledExecutorService.scheduleAtFixedRate(() => {
+            masterRef.send(HeartBeat(rpcEnv.address))
+            logDebug(s"Send heatBeat message at ${System.currentTimeMillis()}")
+          }, 0, 10, TimeUnit.SECONDS)
         }
       }
 
@@ -70,7 +77,10 @@ private[deploy] class Agent(val rpcEnv: RpcEnv)
     this.self.send(RegisterSelf)
   }
 
-  override def onStop(): Unit = super.onStop()
+  override def onStop(): Unit = {
+    agentExecutors.shutdown()
+    heartBeatScheduledExecutorService.shutdown()
+  }
 
   private def connectToMasters(masterRpcAddress: Seq[RpcAddress]): Unit = {
     connect(masterRpcAddress.head)
@@ -89,6 +99,7 @@ private[deploy] class Agent(val rpcEnv: RpcEnv)
           shouldStop = true
         } catch {
           case e: Exception =>
+            logInfo(s"Failed connecting to master for the $count time.", e)
             Thread.sleep(10 * 1000)
             count = count + 1
         }

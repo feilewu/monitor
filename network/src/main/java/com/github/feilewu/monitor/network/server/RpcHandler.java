@@ -53,7 +53,7 @@ public abstract class RpcHandler {
         receive(client, message, ONE_WAY_RPC_CALLBACK);
     }
 
-    private static final class OneWayRpcCallback implements RpcResponseCallback {
+    public static final class OneWayRpcCallback implements RpcResponseCallback {
 
         private static final Logger logger = LoggerFactory.getLogger(OneWayRpcCallback.class);
 
