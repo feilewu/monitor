@@ -24,6 +24,8 @@ package com.github.feilewu.monitor.core.deploy.master
 import java.util
 import java.util.concurrent.TimeUnit
 
+import scala.collection.mutable
+
 import com.github.feilewu.monitor.core.ThreadUtils
 import com.github.feilewu.monitor.core.conf.MonitorConf
 import com.github.feilewu.monitor.core.deploy.{HeartBeat, RegisterAgent}
@@ -75,16 +77,20 @@ private[deploy] class Master(val rpcEnv: RpcEnv) extends RpcEndpoint with Loggin
       Utils.tryLogNonFatal({
         logInfo("Start checking whether the agent is alive.")
         lastHeartBeatOfAgent.synchronized {
+          val needRemove: mutable.ListBuffer[RpcAddress] = mutable.ListBuffer.empty
           lastHeartBeatOfAgent.forEach((address, time) => {
-            if (System.currentTimeMillis() - time > 1 * 60 * 1000) {
-              lastHeartBeatOfAgent.remove(address)
-              addressToAgent.remove(address)
-              logInfo(s"Agent ${address} has been removed from master!")
+            if (System.currentTimeMillis() - time > 0.1 * 60 * 1000) {
+              needRemove += address
             }
+          })
+          needRemove.foreach(address => {
+            lastHeartBeatOfAgent.remove(address)
+            addressToAgent.remove(address)
+            logInfo(s"Agent ${address} has been removed from master!")
           })
         }
       })
-    }, 0, 60, TimeUnit.SECONDS)
+    }, 5, 5, TimeUnit.SECONDS)
   }
 }
 
