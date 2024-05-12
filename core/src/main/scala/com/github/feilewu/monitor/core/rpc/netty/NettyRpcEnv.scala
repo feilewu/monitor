@@ -28,7 +28,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 import scala.concurrent.{Future, Promise, TimeoutException}
 import scala.reflect.ClassTag
-import scala.util.{Failure, Success, Try}
+import scala.util.{DynamicVariable, Failure, Success, Try}
 
 import com.github.feilewu.monitor.core.ThreadUtils
 import com.github.feilewu.monitor.core.conf.MonitorConf
@@ -184,7 +184,9 @@ private [netty] class NettyRpcEnv(val host: String, val conf: MonitorConf)
   }
 
   private[netty] def deserialize[T: ClassTag](bytes: ByteBuffer): T = {
-    javaSerializerInstance.deserialize[T](bytes)
+    NettyRpcEnv.currentEnv.withValue(this) {
+      javaSerializerInstance.deserialize[T](bytes)
+    }
   }
 
   private[netty] def createClient(address: RpcAddress): TransportClient = {
@@ -244,6 +246,8 @@ private [netty] class NettyRpcEnv(val host: String, val conf: MonitorConf)
 }
 
 private[monitor] object NettyRpcEnv {
+
+  private[netty] val currentEnv = new DynamicVariable[NettyRpcEnv](null)
 
   def createNettyRpcEnv(host: String, conf: MonitorConf): NettyRpcEnv = {
     new NettyRpcEnv(host, conf)

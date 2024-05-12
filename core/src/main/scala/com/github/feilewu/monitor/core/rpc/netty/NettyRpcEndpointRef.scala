@@ -21,6 +21,8 @@
  */
 package com.github.feilewu.monitor.core.rpc.netty
 
+import java.io.{ObjectInputStream, ObjectOutputStream}
+
 import scala.concurrent.Future
 import scala.reflect.ClassTag
 
@@ -28,7 +30,7 @@ import com.github.feilewu.monitor.core.conf.MonitorConf
 import com.github.feilewu.monitor.core.rpc.{RpcAddress, RpcEndpointAddress, RpcEndpointRef, RpcEnv, RpcTimeout}
 import com.github.feilewu.monitor.network.client.TransportClient
 
-private [monitor] class NettyRpcEndpointRef(@transient private val nettyEnv: NettyRpcEnv,
+private [monitor] class NettyRpcEndpointRef(@transient private var nettyEnv: NettyRpcEnv,
                                             @transient val conf: MonitorConf,
                                         private val endpointAddress: RpcEndpointAddress)
   extends RpcEndpointRef(conf) {
@@ -51,4 +53,14 @@ private [monitor] class NettyRpcEndpointRef(@transient private val nettyEnv: Net
   override def send(message: Any): Unit = {
     nettyEnv.send(new RequestMessage(nettyEnv.address, this, message))
   }
+
+  private def readObject(in: ObjectInputStream): Unit = {
+    in.defaultReadObject()
+    nettyEnv = NettyRpcEnv.currentEnv.value
+  }
+
+  private def writeObject(out: ObjectOutputStream): Unit = {
+    out.defaultWriteObject()
+  }
+
 }
