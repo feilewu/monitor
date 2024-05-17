@@ -73,4 +73,8 @@ private [monitor] trait Logging {
     log.debug(msg, e)
   }
 
+  protected def logTrace(msg: String): Unit = {
+    log.trace(msg)
+  }
+
 }

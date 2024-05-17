@@ -16,20 +16,33 @@
  */
 /**
  * @Author: pf_xu
- * @Date: 2024/4/28 21:12
+ * @Date: 2024/5/7 22:10
  * @email：pfxuchn@gmail.com
  */
-package com.github.feilewu.monitor.core.conf.config
+package com.github.feilewu.monitor.core.util
 
-private[monitor] object Config {
+import java.io.File
 
-  private[monitor] val MONITOR_MASTER = ConfigBuilder("monitor.master")
-    .stringConf()
-    .createWithDefault("monitor://127.0.0.1:7077")
+object IOUtils {
 
-  private[monitor] val EXECUTOR_LOG_DIR = ConfigBuilder("monitor.executor.log.dir")
-    .stringConf()
-    .createWithDefault("/tmp/monitor/executor")
+  def createFile(filePath: String): Unit = {
+    val file = new File(filePath)
+    if (!file.exists()) {
+      if (file.getParentFile != null && !file.getParentFile.isDirectory) {
+        createDirectory(file.getParentFile.getPath)
+      }
+      file.createNewFile()
+    }
+
+  }
+
+  def createDirectory(path: String): Unit = {
+    val file = new File(path)
+    if (!file.exists()) {
+      file.mkdirs()
+    }
+  }
+
 
 
 }

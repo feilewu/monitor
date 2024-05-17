@@ -4,12 +4,12 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>com.github.feilewu</groupId>
+        <groupId>com.github.feilewu.monitor</groupId>
         <artifactId>monitor-parent</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
 
-    <artifactId>core</artifactId>
+    <artifactId>monitor-core</artifactId>
 
     <properties>
         <maven.compiler.source>8</maven.compiler.source>
@@ -19,8 +19,8 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.github.feilewu</groupId>
-            <artifactId>network</artifactId>
+            <groupId>com.github.feilewu.monitor</groupId>
+            <artifactId>monitor-network</artifactId>
         </dependency>
 
         <dependency>

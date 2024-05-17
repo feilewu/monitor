@@ -26,6 +26,9 @@ case class RegisterAgent(cores: String, memory: String,
                          agentRef: RpcEndpointRef) extends DeployMessage
 
 
+case class ExecuteV2ry() extends DeployMessage
+
+
 class DeployMessage extends Serializable
 
 case class HeartBeat(rpcAddress: RpcAddress) extends DeployMessage

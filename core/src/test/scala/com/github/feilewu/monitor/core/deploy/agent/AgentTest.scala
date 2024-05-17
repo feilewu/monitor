@@ -14,22 +14,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /**
  * @Author: pf_xu
- * @Date: 2024/4/28 21:12
+ * @Date: 2024/5/10 21:41
  * @email：pfxuchn@gmail.com
  */
-package com.github.feilewu.monitor.core.conf.config
+package com.github.feilewu.monitor.core.deploy.agent
 
-private[monitor] object Config {
+import org.scalatest.funsuite.AnyFunSuite
 
-  private[monitor] val MONITOR_MASTER = ConfigBuilder("monitor.master")
-    .stringConf()
-    .createWithDefault("monitor://127.0.0.1:7077")
+class AgentTest extends AnyFunSuite {
 
-  private[monitor] val EXECUTOR_LOG_DIR = ConfigBuilder("monitor.executor.log.dir")
-    .stringConf()
-    .createWithDefault("/tmp/monitor/executor")
+
 
 
 }

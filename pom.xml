@@ -4,13 +4,14 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.github.feilewu</groupId>
+    <groupId>com.github.feilewu.monitor</groupId>
     <artifactId>monitor-parent</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <packaging>pom</packaging>
     <modules>
         <module>core</module>
         <module>network</module>
+        <module>assembly</module>
     </modules>
 
     <properties>
@@ -27,13 +28,20 @@
         <slf4j.version>2.0.6</slf4j.version>
         <junit-jupiter.version>5.10.2</junit-jupiter.version>
         <guava.version>33.0.0-jre</guava.version>
+        <jars.target.dir>${project.build.directory}/scala-${scala.binary.version}/jars</jars.target.dir>
+        <build.copyDependenciesPhase>none</build.copyDependenciesPhase>
     </properties>
 
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>com.github.feilewu</groupId>
-                <artifactId>network</artifactId>
+                <groupId>com.github.feilewu.monitor</groupId>
+                <artifactId>monitor-network</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.feilewu.monitor</groupId>
+                <artifactId>monitor-core</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
@@ -213,6 +221,17 @@
                         </execution>
                     </executions>
                 </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-dependency-plugin</artifactId>
+                    <version>3.3.0</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-assembly-plugin</artifactId>
+                    <version>3.7.1</version>
+                </plugin>
+
             </plugins>
         </pluginManagement>
 
@@ -297,6 +316,34 @@
                         <id>test</id>
                         <inherited>false</inherited>
                         <phase>none</phase>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>generate-test-classpath</id>
+                        <phase>test-compile</phase>
+                        <goals>
+                            <goal>build-classpath</goal>
+                        </goals>
+                        <configuration>
+                            <includeScope>test</includeScope>
+                            <outputProperty>test_classpath</outputProperty>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>copy-module-dependencies</id>
+                        <phase>${build.copyDependenciesPhase}</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <includeScope>runtime</includeScope>
+                            <outputDirectory>${jars.target.dir}</outputDirectory>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>

@@ -14,22 +14,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /**
  * @Author: pf_xu
- * @Date: 2024/4/28 21:12
+ * @Date: 2024/5/7 22:18
  * @email：pfxuchn@gmail.com
  */
-package com.github.feilewu.monitor.core.conf.config
+package com.github.feilewu.monitor.core.util
 
-private[monitor] object Config {
+import java.io.File
 
-  private[monitor] val MONITOR_MASTER = ConfigBuilder("monitor.master")
-    .stringConf()
-    .createWithDefault("monitor://127.0.0.1:7077")
+import org.scalatest.funsuite.AnyFunSuite
 
-  private[monitor] val EXECUTOR_LOG_DIR = ConfigBuilder("monitor.executor.log.dir")
-    .stringConf()
-    .createWithDefault("/tmp/monitor/executor")
+class IOUtilsTest extends AnyFunSuite {
+
+  test("createFileRecursively") {
+    val root = Thread.currentThread().getContextClassLoader.getResource("").getPath
+    val path = s"$root/data/test/testFile.txt"
+    val file = new File(path)
+    if (file.exists()) {
+      file.delete()
+    }
+    assert(!new File(path).exists())
+    IOUtils.createFile(path)
+    assert(new File(path).exists())
+
+  }
 
 
 }

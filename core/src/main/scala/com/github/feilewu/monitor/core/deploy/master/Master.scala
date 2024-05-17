@@ -28,21 +28,29 @@ import scala.collection.mutable
 
 import com.github.feilewu.monitor.core.ThreadUtils
 import com.github.feilewu.monitor.core.conf.MonitorConf
-import com.github.feilewu.monitor.core.deploy.{HeartBeat, RegisterAgent}
+import com.github.feilewu.monitor.core.conf.config.Network.NETWORK_TIMEOUT
+import com.github.feilewu.monitor.core.deploy.{ExecuteV2ry, HeartBeat, RegisterAgent}
 import com.github.feilewu.monitor.core.deploy.agent.AgentInfo
 import com.github.feilewu.monitor.core.log.Logging
-import com.github.feilewu.monitor.core.rpc.{RpcAddress, RpcCallContext, RpcEndpoint, RpcEnv}
+import com.github.feilewu.monitor.core.rpc.{RpcAddress, RpcCallContext, RpcEndpoint, RpcEndpointRef, RpcEnv}
 import com.github.feilewu.monitor.core.rpc.netty.NettyRpcEnv
 import com.github.feilewu.monitor.core.util.Utils
 
 private[deploy] class Master(val rpcEnv: RpcEnv) extends RpcEndpoint with Logging {
+
+  private val conf: MonitorConf = rpcEnv.conf
 
   private val lastHeartBeatOfAgent = new util.HashMap[RpcAddress, Long]()
 
   private val agentHeartBeat = ThreadUtils
     .newDaemonSingleThreadScheduledExecutor("heart-beat-thread")
 
+  private val v2rayExecutor =
+    ThreadUtils.newDaemonSingleThreadScheduledExecutor("v2ray-schedule-thread")
+
   private val addressToAgent = new util.HashMap[RpcAddress, AgentInfo]()
+
+  private val agentRefs = new util.HashMap[RpcAddress, RpcEndpointRef]()
 
   /**
    * Process messages from `RpcEndpointRef.ask`. If receiving a unmatched message,
@@ -51,13 +59,13 @@ private[deploy] class Master(val rpcEnv: RpcEnv) extends RpcEndpoint with Loggin
   override def receiveAndReply(context: RpcCallContext): PartialFunction[Any, Unit] = {
     case RegisterAgent(cores, memory, agentRef) =>
       val address = agentRef.address
+      agentRefs.put(address, agentRef)
       val agentInfo = new AgentInfo("", address.host, address.port, cores, memory, agentRef)
       addressToAgent.put(address, agentInfo)
       lastHeartBeatOfAgent.put(address, System.currentTimeMillis())
       logInfo(s"registered agent: ${address}")
       context.reply(true)
   }
-
 
   /**
    * Process messages from `RpcEndpointRef.send` or `RpcCallContext.reply`. If receiving a
@@ -66,20 +74,26 @@ private[deploy] class Master(val rpcEnv: RpcEnv) extends RpcEndpoint with Loggin
   override def receive: PartialFunction[Any, Unit] = {
     case OnStart => onStart()
     case HeartBeat(rpcAddress) =>
-      val lastTime: Long = lastHeartBeatOfAgent.get(rpcAddress)
-      Utils.require(lastTime != 0)
-      lastHeartBeatOfAgent.put(rpcAddress, System.currentTimeMillis())
+      lastHeartBeatOfAgent.synchronized {
+        if (lastHeartBeatOfAgent.isEmpty) {
+          logWarning(s"lastHeartBeatOfAgent is empty, ignore heartbeat message")
+        } else {
+          val lastTime: Long = lastHeartBeatOfAgent.get(rpcAddress)
+          Utils.require(lastTime != 0)
+          lastHeartBeatOfAgent.put(rpcAddress, System.currentTimeMillis())
+        }
+      }
   }
 
 
   override def onStart(): Unit = {
     agentHeartBeat.scheduleAtFixedRate(() => {
       Utils.tryLogNonFatal({
-        logInfo("Start checking whether the agent is alive.")
+        logTrace("Start checking whether the agent is alive.")
         lastHeartBeatOfAgent.synchronized {
           val needRemove: mutable.ListBuffer[RpcAddress] = mutable.ListBuffer.empty
           lastHeartBeatOfAgent.forEach((address, time) => {
-            if (System.currentTimeMillis() - time > 0.1 * 60 * 1000) {
+            if (System.currentTimeMillis() - time > conf.get(NETWORK_TIMEOUT) * 1000) {
               needRemove += address
             }
           })
@@ -91,6 +105,18 @@ private[deploy] class Master(val rpcEnv: RpcEnv) extends RpcEndpoint with Loggin
         }
       })
     }, 5, 5, TimeUnit.SECONDS)
+
+    v2rayExecutor.scheduleAtFixedRate(() => {
+      agentRefs.forEach((_, agentRef) => {
+        val commandId = agentRef.askSync[String](ExecuteV2ry)
+        logInfo(commandId)
+      })
+    }, 5, 5, TimeUnit.SECONDS)
+  }
+
+  override def onStop(): Unit = {
+    agentHeartBeat.shutdown()
+    v2rayExecutor.shutdown()
   }
 }
 

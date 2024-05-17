@@ -29,7 +29,7 @@ private[monitor] object Network {
   private[monitor] val NETWORK_TIMEOUT =
     ConfigBuilder("monitor.network.timeout")
       .timeConf(TimeUnit.SECONDS)
-      .createWithDefaultString("120s")
+      .createWithDefaultString("60s")
 
   private[monitor] val MONITOR_NETWORK_RPC_CONNECT_TIMEOUT =
     ConfigBuilder("monitor.network.rpc.connect.timeout")

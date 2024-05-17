@@ -1,1 +1,37 @@
+name: Build and Publish Release  # 工作流名称
+
+on:
+  push:
+    branches:
+      - main  # 当代码推送到master分支时触发工作流程
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest  # 在最新的Ubuntu操作系统上运行任务
+
+    steps:
+      - uses: actions/checkout@v3  # 使用GitHub官方的checkout action，用于检出代码库
+
+#      - name: Install curl (for nektos/act local CI testing)
+#        run: apt-get update && apt-get install build-essential curl pkg-config openssl -y
+#
+#      - name: Download Maven
+#        run: |
+#          curl -sL https://archive.apache.org/dist/maven/maven-3/3.6.3/binaries/apache-maven-3.6.3-bin.zip -o maven.zip
+#          apt-get update
+#          apt-get -y install unzip
+#          unzip -d /usr/share maven.zip
+#          rm maven.zip
+#          ln -s /usr/share/apache-maven-3.6.3/bin/mvn /usr/bin/mvn
+#          echo "M2_HOME=/usr/share/apache-maven-3.6.3" | tee -a /etc/environment
+
+      - name: Set up JDK  # 设置JDK
+        uses: actions/setup-java@v4  # 使用GitHub官方的setup-java action，用于安装和配置Java环境
+        with:
+          java-version: 8
+          distribution: "adopt"
+          cache: maven
+
+      - name: Build with Maven  # 使用Maven构建项目
+        run: mvn package --batch-mode  # 执行mvn package命令进行项目构建
 
