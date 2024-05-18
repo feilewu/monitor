@@ -14,24 +14,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /**
  * @Author: pf_xu
- * @Date: 2024/4/28 21:06
+ * @Date: 2024/5/17 22:42
  * @email：pfxuchn@gmail.com
  */
-package com.github.feilewu.monitor.core.deploy
 
-import com.github.feilewu.monitor.core.rpc.{RpcAddress, RpcEndpointRef}
-case class RegisterAgent(cores: String, memory: String,
-                         agentRef: RpcEndpointRef) extends DeployMessage
+package com.github.feilewu.monitor.core.deploy.runtime
+
+import org.scalatest.funsuite.AnyFunSuite
+
+class V2RayManagerTest extends AnyFunSuite {
+
+  test("test isMaster and isAgent") {
+
+    assertThrows[IllegalArgumentException] {
+      new V2rayManager(false, false, null)
+    }
+
+    assertThrows[IllegalArgumentException] {
+      new V2rayManager(true, true, null)
+    }
+
+  }
 
 
-class CommandMessage extends DeployMessage
 
-
-case class ExecuteV2ry() extends CommandMessage
-
-
-class DeployMessage extends Serializable
-
-case class HeartBeat(rpcAddress: RpcAddress) extends DeployMessage
+}

@@ -25,12 +25,14 @@ import java.util
 import java.util.concurrent.TimeUnit
 
 import scala.collection.mutable
+import scala.jdk.CollectionConverters.MapHasAsScala
 
 import com.github.feilewu.monitor.core.ThreadUtils
 import com.github.feilewu.monitor.core.conf.MonitorConf
 import com.github.feilewu.monitor.core.conf.config.Network.NETWORK_TIMEOUT
-import com.github.feilewu.monitor.core.deploy.{ExecuteV2ry, HeartBeat, RegisterAgent}
+import com.github.feilewu.monitor.core.deploy.{HeartBeat, RegisterAgent}
 import com.github.feilewu.monitor.core.deploy.agent.AgentInfo
+import com.github.feilewu.monitor.core.deploy.runtime.V2rayManager
 import com.github.feilewu.monitor.core.log.Logging
 import com.github.feilewu.monitor.core.rpc.{RpcAddress, RpcCallContext, RpcEndpoint, RpcEndpointRef, RpcEnv}
 import com.github.feilewu.monitor.core.rpc.netty.NettyRpcEnv
@@ -51,6 +53,11 @@ private[deploy] class Master(val rpcEnv: RpcEnv) extends RpcEndpoint with Loggin
   private val addressToAgent = new util.HashMap[RpcAddress, AgentInfo]()
 
   private val agentRefs = new util.HashMap[RpcAddress, RpcEndpointRef]()
+
+  private val v2rayManager = new V2rayManager(true, false, this)
+
+  private[monitor] def agents: List[RpcEndpointRef] =
+    agentRefs.asScala.toList.map(tuple => tuple._2)
 
   /**
    * Process messages from `RpcEndpointRef.ask`. If receiving a unmatched message,
@@ -107,11 +114,16 @@ private[deploy] class Master(val rpcEnv: RpcEnv) extends RpcEndpoint with Loggin
     }, 5, 5, TimeUnit.SECONDS)
 
     v2rayExecutor.scheduleAtFixedRate(() => {
-      agentRefs.forEach((_, agentRef) => {
-        val commandId = agentRef.askSync[String](ExecuteV2ry)
-        logInfo(commandId)
-      })
+      sendV2rayExecutionToAllAgents()
     }, 5, 5, TimeUnit.SECONDS)
+  }
+
+  def sendV2rayExecutionToAgent(agent: RpcEndpointRef): Unit = {
+    v2rayManager.sendExecution(agent)
+  }
+
+  def sendV2rayExecutionToAllAgents(): Unit = {
+    agents.foreach(sendV2rayExecutionToAgent)
   }
 
   override def onStop(): Unit = {

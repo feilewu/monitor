@@ -21,11 +21,9 @@
  */
 package com.github.feilewu.monitor.core.deploy.agent
 
-import java.util
 import java.util.concurrent.{ScheduledExecutorService, ThreadPoolExecutor, TimeUnit}
 
-import scala.concurrent.{ExecutionContext, Promise}
-import scala.util.{Failure, Success}
+import scala.concurrent.ExecutionContext
 
 import com.github.feilewu.monitor.core.ThreadUtils
 import com.github.feilewu.monitor.core.conf.MonitorConf
@@ -33,7 +31,7 @@ import com.github.feilewu.monitor.core.conf.config.Config
 import com.github.feilewu.monitor.core.conf.config.Config.EXECUTOR_LOG_DIR
 import com.github.feilewu.monitor.core.deploy.{ExecuteV2ry, HeartBeat, RegisterAgent}
 import com.github.feilewu.monitor.core.deploy.master.Master
-import com.github.feilewu.monitor.core.deploy.runtime.{ExecuteException, V2rayExecutor}
+import com.github.feilewu.monitor.core.deploy.runtime.V2rayManager
 import com.github.feilewu.monitor.core.log.Logging
 import com.github.feilewu.monitor.core.rpc._
 import com.github.feilewu.monitor.core.rpc.netty.NettyRpcEnv
@@ -53,7 +51,7 @@ private[deploy] class Agent(val rpcEnv: RpcEnv)
   private val heartBeatScheduledExecutorService: ScheduledExecutorService =
     ThreadUtils.newDaemonSingleThreadScheduledExecutor("heartbeat-thread")
 
-  private val v2rayExecutorCommands = new util.HashSet[String]
+  private val v2rayManager = new V2rayManager(false, true, this)
 
   override def receive: PartialFunction[Any, Unit] = {
     case OnStart => onStart()
@@ -79,30 +77,8 @@ private[deploy] class Agent(val rpcEnv: RpcEnv)
   override def receiveAndReply(context: RpcCallContext): PartialFunction[Any, Unit] = {
     case ExecuteV2ry =>
       val logDir = rpcEnv.conf.get(EXECUTOR_LOG_DIR)
-      def onSuccess(id: Any): Unit = {
-        logInfo(s"command: $id executed successfully")
-        context.reply(id)
-      }
-      def onFailure(e: Throwable): Unit = {
-        e match {
-          case ExecuteException(commandId, throwable) =>
-            logError(s"command:$commandId executed failed.", throwable)
-            context.reply()
-        }
-      }
-      val p = Promise[Any]()
-      p.future.onComplete {
-        case Success(id) => onSuccess(id)
-        case Failure(e) => onFailure(e)
-      } (agentExecutorsExecutionContext)
-      val v2rayExecutor: V2rayExecutor = new V2rayExecutor(true, logDir)
-      agentExecutors.execute(() => {
-        v2rayExecutor.run(p)
-      })
-      v2rayExecutorCommands.synchronized {
-        v2rayExecutorCommands.add(v2rayExecutor.id)
-      }
-      context.reply(v2rayExecutor.id)
+      val id = v2rayManager.executeV2ry(logDir)
+      context.reply(id)
   }
 
   override def onStart(): Unit = {
@@ -115,6 +91,8 @@ private[deploy] class Agent(val rpcEnv: RpcEnv)
     agentExecutors.shutdown()
     heartBeatScheduledExecutorService.shutdown()
   }
+
+  private[deploy] def executionContext: ExecutionContext = agentExecutorsExecutionContext
 
   private def connectToMasters(masterRpcAddress: Seq[RpcAddress]): Unit = {
     connect(masterRpcAddress.head)
