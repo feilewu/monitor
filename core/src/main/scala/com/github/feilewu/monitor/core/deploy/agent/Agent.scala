@@ -29,7 +29,7 @@ import com.github.feilewu.monitor.core.ThreadUtils
 import com.github.feilewu.monitor.core.conf.MonitorConf
 import com.github.feilewu.monitor.core.conf.config.Config
 import com.github.feilewu.monitor.core.conf.config.Config.EXECUTOR_LOG_DIR
-import com.github.feilewu.monitor.core.deploy.{ExecuteV2ry, HeartBeat, RegisterAgent}
+import com.github.feilewu.monitor.core.deploy.{ExecuteV2ry, HeartBeat, PollTaskState, RegisterAgent}
 import com.github.feilewu.monitor.core.deploy.master.Master
 import com.github.feilewu.monitor.core.deploy.runtime.V2rayManager
 import com.github.feilewu.monitor.core.log.Logging
@@ -79,6 +79,11 @@ private[deploy] class Agent(val rpcEnv: RpcEnv)
       val logDir = rpcEnv.conf.get(EXECUTOR_LOG_DIR)
       val id = v2rayManager.executeV2ry(logDir)
       context.reply(id)
+
+    case PollTaskState(id) =>
+      val logDir = rpcEnv.conf.get(EXECUTOR_LOG_DIR)
+      val state = v2rayManager.readTaskResult(id, logDir)
+      context.reply(state)
   }
 
   override def onStart(): Unit = {

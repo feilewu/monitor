@@ -23,22 +23,13 @@ package com.github.feilewu.monitor.core.deploy.runtime
 
 import java.io.{File, FileOutputStream, InputStream}
 import java.util.UUID
+import java.util.regex.Pattern
 
 import scala.concurrent.Promise
 
 import com.github.feilewu.monitor.core.deploy.runtime.Executor.{random, writeToFile}
 import com.github.feilewu.monitor.core.log.Logging
 import com.github.feilewu.monitor.core.util.IOUtils
-
-private[monitor] trait ExecutorCallback {
-
- def onSuccess(): Unit = {
-
- }
-
-}
-
-
 
 private[runtime] abstract class Executor(val logEnabled: Boolean,
                                         val logDir: String) extends Logging {
@@ -133,6 +124,18 @@ object Executor {
     })
     thread.start()
     thread
+  }
+
+
+  def regularMatchingV2ray(message: String): Option[String] = {
+    val p = Pattern.compile("vmess://.*=")
+    val matcher = p.matcher(message)
+    if (matcher.find()) {
+      Some(matcher.group())
+    } else {
+      Option(null)
+    }
+
   }
 
 }

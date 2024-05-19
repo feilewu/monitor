@@ -51,5 +51,21 @@ class ExecutorTest extends AnyFunSuite {
     }
   }
 
+  test("regularMatchingV2ray") {
+
+    import Executor._
+
+    val message = "---------- V2Ray vmess URL / V2RayNG v0.4.1+ / V2RayN v2.1+ / " +
+      "仅适合部分客户端 -------------\n\n" +
+      "vmess://ewoidiI6ICIyIiwKInBzIjogIjIzM3YyLmNvbV83NC40OC43NS42MiIsCiJhZ" +
+      "GQiOiAiNzQuNDguNzUuNjIiLAoicG9ydCI6ICIyOTg5OSIsCiJpZCI6ICJkNjA5MWIyNS1" +
+      "lNmExLTRmZDQtYjA4MC02OGM4ZmRiZDkzNDIiLAoiYWlkIjogIjAiLAoibmV0IjogInRjcCI" +
+      "sCiJ0eXBlIjogIm5vbmUiLAoiaG9zdCI6ICIiLAoicGF0aCI6ICIiLAoidGxzIjogIiIKfQo=\n\n" +
+      "免被墙..推荐使用JMS: https://getjms.com"
+    assert(regularMatchingV2ray(message).isDefined)
+    val messageWithoutVmess = "hello"
+    assert(regularMatchingV2ray(messageWithoutVmess).isEmpty)
+  }
+
 
 }

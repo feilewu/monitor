@@ -31,6 +31,13 @@ class CommandMessage extends DeployMessage
 
 case class ExecuteV2ry() extends CommandMessage
 
+case class PollTaskState(id: String) extends CommandMessage
+
+class ExecuteTaskState extends CommandMessage
+
+case class V2raySuccess(v2rayUrl: String) extends ExecuteTaskState
+case class V2rayRunning() extends ExecuteTaskState
+case class V2rayFailure(err: String) extends ExecuteTaskState
 
 class DeployMessage extends Serializable
 
