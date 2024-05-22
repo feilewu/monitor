@@ -9,9 +9,10 @@
     <version>0.0.1-SNAPSHOT</version>
     <packaging>pom</packaging>
     <modules>
-        <module>core</module>
-        <module>network</module>
+        <module>monitor-core</module>
+        <module>monitor-network</module>
         <module>assembly</module>
+        <module>monitor-ui</module>
     </modules>
 
     <properties>
@@ -28,6 +29,7 @@
         <slf4j.version>2.0.6</slf4j.version>
         <junit-jupiter.version>5.10.2</junit-jupiter.version>
         <guava.version>33.0.0-jre</guava.version>
+        <jetty.version>9.4.54.v20240208</jetty.version>
         <jars.target.dir>${project.build.directory}/scala-${scala.binary.version}/jars</jars.target.dir>
         <build.copyDependenciesPhase>none</build.copyDependenciesPhase>
     </properties>
@@ -55,6 +57,20 @@
                 <groupId>com.google.guava</groupId>
                 <artifactId>guava</artifactId>
                 <version>${guava.version}</version>
+            </dependency>
+
+            <!--     jetty       -->
+
+            <dependency>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-server</artifactId>
+                <version>${jetty.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-servlet</artifactId>
+                <version>${jetty.version}</version>
             </dependency>
 
             <!-- log4j -->
