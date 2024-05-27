@@ -69,5 +69,14 @@ private[monitor] object Utils extends Logging {
     }
   }
 
+  // scalastyle:off classforname
+  def classForName[T](className: String): Class[T] = {
+
+    Class.forName(className).asInstanceOf[Class[T]]
+
+  }
+
+  // scalastyle:on classforname
+
 
 }

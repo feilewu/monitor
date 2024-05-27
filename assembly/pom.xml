@@ -23,6 +23,11 @@
             <groupId>com.github.feilewu.monitor</groupId>
             <artifactId>monitor-core</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>com.github.feilewu.monitor</groupId>
+            <artifactId>monitor-ui</artifactId>
+        </dependency>
     </dependencies>
 
 

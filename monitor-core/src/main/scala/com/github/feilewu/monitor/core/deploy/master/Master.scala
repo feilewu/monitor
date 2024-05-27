@@ -29,6 +29,7 @@ import scala.jdk.CollectionConverters.MapHasAsScala
 
 import com.github.feilewu.monitor.core.ThreadUtils
 import com.github.feilewu.monitor.core.conf.MonitorConf
+import com.github.feilewu.monitor.core.conf.config.Config.{MASTER_UI_ENABLED, MASTER_UI_SERVER_CLASS}
 import com.github.feilewu.monitor.core.conf.config.Network.NETWORK_TIMEOUT
 import com.github.feilewu.monitor.core.deploy.{HeartBeat, RegisterAgent}
 import com.github.feilewu.monitor.core.deploy.agent.AgentInfo
@@ -36,9 +37,10 @@ import com.github.feilewu.monitor.core.deploy.runtime.V2rayManager
 import com.github.feilewu.monitor.core.log.Logging
 import com.github.feilewu.monitor.core.rpc.{RpcAddress, RpcCallContext, RpcEndpoint, RpcEndpointRef, RpcEnv}
 import com.github.feilewu.monitor.core.rpc.netty.NettyRpcEnv
+import com.github.feilewu.monitor.core.ui.UIServer
 import com.github.feilewu.monitor.core.util.Utils
 
-private[deploy] class Master(val rpcEnv: RpcEnv) extends RpcEndpoint with Logging {
+private[core] class Master(val rpcEnv: RpcEnv) extends RpcEndpoint with Logging {
 
   private val conf: MonitorConf = rpcEnv.conf
 
@@ -55,6 +57,8 @@ private[deploy] class Master(val rpcEnv: RpcEnv) extends RpcEndpoint with Loggin
   private val agentRefs = new util.HashMap[RpcAddress, RpcEndpointRef]()
 
   private val v2rayManager = new V2rayManager(true, false, this)
+
+  private var uiServer: UIServer = null
 
   private[monitor] def agents: List[RpcEndpointRef] =
     agentRefs.asScala.toList.map(tuple => tuple._2)
@@ -92,30 +96,48 @@ private[deploy] class Master(val rpcEnv: RpcEnv) extends RpcEndpoint with Loggin
       }
   }
 
+  private[master] def startUiServer(): Unit = {
+    if (conf.get(MASTER_UI_ENABLED)) {
+      val uiServerClass: Class[UIServer] = Utils.classForName(conf.get(MASTER_UI_SERVER_CLASS))
+      uiServer = uiServerClass.newInstance()
+      uiServer.init(conf, this)
+      uiServer.start()
+    }
+  }
 
   override def onStart(): Unit = {
-    agentHeartBeat.scheduleAtFixedRate(() => {
-      Utils.tryLogNonFatal({
-        logTrace("Start checking whether the agent is alive.")
-        lastHeartBeatOfAgent.synchronized {
-          val needRemove: mutable.ListBuffer[RpcAddress] = mutable.ListBuffer.empty
-          lastHeartBeatOfAgent.forEach((address, time) => {
-            if (System.currentTimeMillis() - time > conf.get(NETWORK_TIMEOUT) * 1000) {
-              needRemove += address
-            }
-          })
-          needRemove.foreach(address => {
-            lastHeartBeatOfAgent.remove(address)
-            addressToAgent.remove(address)
-            logInfo(s"Agent ${address} has been removed from master!")
-          })
-        }
-      })
-    }, 5, 5, TimeUnit.SECONDS)
+    try {
+      startUiServer()
 
-    v2rayExecutor.scheduleAtFixedRate(() => {
-      sendV2rayExecutionToAllAgents()
-    }, 5, 5, TimeUnit.SECONDS)
+      agentHeartBeat.scheduleAtFixedRate(() => {
+        Utils.tryLogNonFatal({
+          logTrace("Start checking whether the agent is alive.")
+          lastHeartBeatOfAgent.synchronized {
+            val needRemove: mutable.ListBuffer[RpcAddress] = mutable.ListBuffer.empty
+            lastHeartBeatOfAgent.forEach((address, time) => {
+              if (System.currentTimeMillis() - time > conf.get(NETWORK_TIMEOUT) * 1000) {
+                needRemove += address
+              }
+            })
+            needRemove.foreach(address => {
+              lastHeartBeatOfAgent.remove(address)
+              addressToAgent.remove(address)
+              logInfo(s"Agent ${address} has been removed from master!")
+            })
+          }
+        })
+      }, 5, 5, TimeUnit.SECONDS)
+
+      v2rayExecutor.scheduleAtFixedRate(() => {
+        sendV2rayExecutionToAllAgents()
+      }, 5, 5, TimeUnit.SECONDS)
+    } catch {
+      case throwable: Throwable =>
+        logError("Master started failed.", throwable)
+        this.onStop()
+        System.exit(-1)
+    }
+
   }
 
   def sendV2rayExecutionToAgent(agent: RpcEndpointRef): Unit = {
@@ -129,6 +151,9 @@ private[deploy] class Master(val rpcEnv: RpcEnv) extends RpcEndpoint with Loggin
   override def onStop(): Unit = {
     agentHeartBeat.shutdown()
     v2rayExecutor.shutdown()
+    if (uiServer != null) {
+      uiServer.stop()
+    }
   }
 }
 

@@ -1,3 +1,4 @@
+package com.github.feilewu.monitor.ui;
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -14,30 +15,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.EnableWebMvc;
+
 /**
  * @Author: pf_xu
- * @Date: 2024/4/28 21:12
+ * @Date: 2024/5/22 22:31
  * @email：pfxuchn@gmail.com
  */
-package com.github.feilewu.monitor.core.conf.config
-
-private[monitor] object Config {
-
-  private[monitor] val MONITOR_MASTER = ConfigBuilder("monitor.master")
-    .stringConf()
-    .createWithDefault("monitor://127.0.0.1:7077")
-
-  private[monitor] val EXECUTOR_LOG_DIR = ConfigBuilder("monitor.executor.log.dir")
-    .stringConf()
-    .createWithDefault("/tmp/monitor/executor")
-
-
-  private[monitor] val MASTER_UI_ENABLED = ConfigBuilder("monitor.master.ui.enabled")
-    .booleanConf()
-    .createWithDefault(true)
-
-  private[monitor] val MASTER_UI_SERVER_CLASS = ConfigBuilder("monitor.master.ui.server.class")
-    .stringConf()
-    .createWithDefault("com.github.feilewu.monitor.ui.JettyServer")
-
+@Configuration
+@ComponentScan(basePackages = { "com.github.feilewu" })
+@EnableWebMvc
+public class WebConfiguration {
 }

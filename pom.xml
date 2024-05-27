@@ -30,6 +30,7 @@
         <junit-jupiter.version>5.10.2</junit-jupiter.version>
         <guava.version>33.0.0-jre</guava.version>
         <jetty.version>9.4.54.v20240208</jetty.version>
+        <spring.version>5.3.35</spring.version>
         <jars.target.dir>${project.build.directory}/scala-${scala.binary.version}/jars</jars.target.dir>
         <build.copyDependenciesPhase>none</build.copyDependenciesPhase>
     </properties>
@@ -44,6 +45,12 @@
             <dependency>
                 <groupId>com.github.feilewu.monitor</groupId>
                 <artifactId>monitor-core</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.github.feilewu.monitor</groupId>
+                <artifactId>monitor-ui</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
@@ -71,6 +78,13 @@
                 <groupId>org.eclipse.jetty</groupId>
                 <artifactId>jetty-servlet</artifactId>
                 <version>${jetty.version}</version>
+            </dependency>
+
+            <!--     ui       -->
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-webmvc</artifactId>
+                <version>${spring.version}</version>
             </dependency>
 
             <!-- log4j -->

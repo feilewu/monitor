@@ -16,28 +16,31 @@
  */
 /**
  * @Author: pf_xu
- * @Date: 2024/4/28 21:12
+ * @Date: 2024/5/26 10:16
  * @email：pfxuchn@gmail.com
  */
-package com.github.feilewu.monitor.core.conf.config
+package com.github.feilewu.monitor.core.ui
 
-private[monitor] object Config {
-
-  private[monitor] val MONITOR_MASTER = ConfigBuilder("monitor.master")
-    .stringConf()
-    .createWithDefault("monitor://127.0.0.1:7077")
-
-  private[monitor] val EXECUTOR_LOG_DIR = ConfigBuilder("monitor.executor.log.dir")
-    .stringConf()
-    .createWithDefault("/tmp/monitor/executor")
+import com.github.feilewu.monitor.core.conf.MonitorConf
+import com.github.feilewu.monitor.core.deploy.master.Master
 
 
-  private[monitor] val MASTER_UI_ENABLED = ConfigBuilder("monitor.master.ui.enabled")
-    .booleanConf()
-    .createWithDefault(true)
+private[monitor] class UIServerException(message: String, cause: Throwable)
+  extends RuntimeException {
 
-  private[monitor] val MASTER_UI_SERVER_CLASS = ConfigBuilder("monitor.master.ui.server.class")
-    .stringConf()
-    .createWithDefault("com.github.feilewu.monitor.ui.JettyServer")
+  def this(throwable: Throwable) = {
+    this(null, throwable)
+  }
+
+}
+
+
+private[monitor] trait UIServer {
+
+  def init(conf: MonitorConf, master: Master)
+
+  def start()
+
+  def stop()
 
 }
