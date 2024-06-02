@@ -32,7 +32,7 @@ import com.github.feilewu.monitor.core.conf.MonitorConf
 import com.github.feilewu.monitor.core.conf.config.Config.{MASTER_UI_ENABLED, MASTER_UI_SERVER_CLASS}
 import com.github.feilewu.monitor.core.conf.config.Network.NETWORK_TIMEOUT
 import com.github.feilewu.monitor.core.deploy.{HeartBeat, RegisterAgent}
-import com.github.feilewu.monitor.core.deploy.agent.AgentInfo
+import com.github.feilewu.monitor.core.deploy.agent.AgentRegisterInfo
 import com.github.feilewu.monitor.core.deploy.runtime.V2rayManager
 import com.github.feilewu.monitor.core.log.Logging
 import com.github.feilewu.monitor.core.rpc.{RpcAddress, RpcCallContext, RpcEndpoint, RpcEndpointRef, RpcEnv}
@@ -54,7 +54,7 @@ private[core] class Master(val rpcEnv: RpcEnv) extends RpcEndpoint
   private val v2rayExecutor =
     ThreadUtils.newDaemonSingleThreadScheduledExecutor("v2ray-schedule-thread")
 
-  private val addressToAgent = new util.HashMap[RpcAddress, AgentInfo]()
+  private val addressToAgent = new util.HashMap[RpcAddress, AgentRegisterInfo]()
 
   private val agentRefs = new util.HashMap[RpcAddress, RpcEndpointRef]()
 
@@ -70,10 +70,10 @@ private[core] class Master(val rpcEnv: RpcEnv) extends RpcEndpoint
    * `SparkException` will be thrown and sent to `onError`.
    */
   override def receiveAndReply(context: RpcCallContext): PartialFunction[Any, Unit] = {
-    case RegisterAgent(cores, memory, agentRef) =>
+    case RegisterAgent(agentRef) =>
       val address = agentRef.address
       agentRefs.put(address, agentRef)
-      val agentInfo = new AgentInfo("", address.host, address.port, cores, memory, agentRef)
+      val agentInfo = new AgentRegisterInfo("", address.host, address.port, agentRef)
       addressToAgent.put(address, agentInfo)
       lastHeartBeatOfAgent.put(address, System.currentTimeMillis())
       logInfo(s"registered agent: ${address}")

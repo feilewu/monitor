@@ -22,8 +22,7 @@
 package com.github.feilewu.monitor.core.deploy
 
 import com.github.feilewu.monitor.core.rpc.{RpcAddress, RpcEndpointRef}
-case class RegisterAgent(cores: String, memory: String,
-                         agentRef: RpcEndpointRef) extends DeployMessage
+case class RegisterAgent(agentRef: RpcEndpointRef) extends DeployMessage
 
 
 class CommandMessage extends DeployMessage

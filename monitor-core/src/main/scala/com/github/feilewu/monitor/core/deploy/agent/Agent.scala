@@ -56,10 +56,8 @@ private[deploy] class Agent(val rpcEnv: RpcEnv)
   override def receive: PartialFunction[Any, Unit] = {
     case OnStart => onStart()
     case RegisterSelf =>
-      val cores = Runtime.getRuntime.availableProcessors()
-      val memory = "2048G"
       Utils.tryLogNonFatal(this) {
-        val resp = masterRef.askSync[Boolean](RegisterAgent(cores.toString, memory, this.self))
+        val resp = masterRef.askSync[Boolean](RegisterAgent(this.self))
         if (!resp) {
           logError(s"Cannot register itself in master, ${masterRef.address}")
           System.exit(-1)

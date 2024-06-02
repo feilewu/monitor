@@ -23,10 +23,8 @@ package com.github.feilewu.monitor.core.deploy.agent
 
 import com.github.feilewu.monitor.core.rpc.RpcEndpointRef
 
-private[deploy] class AgentInfo(
+private[deploy] class AgentRegisterInfo(
     val id: String,
     val host: String,
     val port: Int,
-    val cores: String,
-    val memory: String,
     val agentRef: RpcEndpointRef) extends Serializable
