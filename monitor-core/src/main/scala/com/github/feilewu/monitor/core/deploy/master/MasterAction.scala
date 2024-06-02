@@ -16,30 +16,17 @@
  */
 /**
  * @Author: pf_xu
- * @Date: 2024/5/26 10:16
+ * @Date: 2024/5/31 20:25
  * @email：pfxuchn@gmail.com
  */
-package com.github.feilewu.monitor.core.ui
+package com.github.feilewu.monitor.core.deploy.master
 
-import com.github.feilewu.monitor.core.deploy.master.MasterAction
+import com.github.feilewu.monitor.core.conf.MonitorConf
 
-
-private[monitor] class UIServerException(message: String, cause: Throwable)
-  extends RuntimeException(message, cause) {
-
-  def this(throwable: Throwable) = {
-    this(null, throwable)
-  }
-
-}
+trait MasterAction {
 
 
-private[monitor] trait UIServer {
+  def monitorConf: MonitorConf
 
-  def init(action: MasterAction): Unit
-
-  def start(): Unit
-
-  def stop(): Unit
 
 }

@@ -1,3 +1,4 @@
+package com.github.feilewu.monitor.ui;
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -14,32 +15,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+import com.github.feilewu.monitor.core.deploy.master.MasterAction;
+import org.springframework.stereotype.Component;
+
 /**
  * @Author: pf_xu
- * @Date: 2024/5/26 10:16
+ * @Date: 2024/5/31 22:12
  * @email：pfxuchn@gmail.com
  */
-package com.github.feilewu.monitor.core.ui
+@Component
+public class UIContext {
 
-import com.github.feilewu.monitor.core.deploy.master.MasterAction
+    private MasterAction action;
+    public void setAction(MasterAction action) {
+        this.action = action;
+    }
 
+    public MasterAction getAction() {
+        return action;
+    }
 
-private[monitor] class UIServerException(message: String, cause: Throwable)
-  extends RuntimeException(message, cause) {
-
-  def this(throwable: Throwable) = {
-    this(null, throwable)
-  }
-
-}
-
-
-private[monitor] trait UIServer {
-
-  def init(action: MasterAction): Unit
-
-  def start(): Unit
-
-  def stop(): Unit
 
 }

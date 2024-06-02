@@ -31,6 +31,7 @@
         <guava.version>33.0.0-jre</guava.version>
         <jetty.version>9.4.54.v20240208</jetty.version>
         <spring.version>5.3.35</spring.version>
+        <thymeleaf.version>3.0.13.RELEASE</thymeleaf.version>
         <jars.target.dir>${project.build.directory}/scala-${scala.binary.version}/jars</jars.target.dir>
         <build.copyDependenciesPhase>none</build.copyDependenciesPhase>
     </properties>
@@ -85,6 +86,12 @@
                 <groupId>org.springframework</groupId>
                 <artifactId>spring-webmvc</artifactId>
                 <version>${spring.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.thymeleaf</groupId>
+                <artifactId>thymeleaf-spring5</artifactId>
+                <version>${thymeleaf.version}</version>
             </dependency>
 
             <!-- log4j -->

@@ -40,7 +40,9 @@ import com.github.feilewu.monitor.core.rpc.netty.NettyRpcEnv
 import com.github.feilewu.monitor.core.ui.UIServer
 import com.github.feilewu.monitor.core.util.Utils
 
-private[core] class Master(val rpcEnv: RpcEnv) extends RpcEndpoint with Logging {
+private[core] class Master(val rpcEnv: RpcEnv) extends RpcEndpoint
+  with Logging
+  with MasterAction {
 
   private val conf: MonitorConf = rpcEnv.conf
 
@@ -100,7 +102,7 @@ private[core] class Master(val rpcEnv: RpcEnv) extends RpcEndpoint with Logging 
     if (conf.get(MASTER_UI_ENABLED)) {
       val uiServerClass: Class[UIServer] = Utils.classForName(conf.get(MASTER_UI_SERVER_CLASS))
       uiServer = uiServerClass.newInstance()
-      uiServer.init(conf, this)
+      uiServer.init(this)
       uiServer.start()
     }
   }
@@ -155,6 +157,8 @@ private[core] class Master(val rpcEnv: RpcEnv) extends RpcEndpoint with Logging 
       uiServer.stop()
     }
   }
+
+  override def monitorConf: MonitorConf = conf
 }
 
 private[master] object OnStart

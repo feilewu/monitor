@@ -1,3 +1,4 @@
+package com.github.feilewu.monitor.ui.controller;
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -14,32 +15,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.RequestMapping;
+
 /**
  * @Author: pf_xu
- * @Date: 2024/5/26 10:16
+ * @Date: 2024/5/27 22:20
  * @email：pfxuchn@gmail.com
  */
-package com.github.feilewu.monitor.core.ui
+@Controller
+public class Site {
 
-import com.github.feilewu.monitor.core.deploy.master.MasterAction
-
-
-private[monitor] class UIServerException(message: String, cause: Throwable)
-  extends RuntimeException(message, cause) {
-
-  def this(throwable: Throwable) = {
-    this(null, throwable)
-  }
-
-}
+    @RequestMapping("/")
+    public String index(Model model) {
+        return "index";
+    }
 
 
-private[monitor] trait UIServer {
 
-  def init(action: MasterAction): Unit
 
-  def start(): Unit
 
-  def stop(): Unit
+
+
+
+
 
 }

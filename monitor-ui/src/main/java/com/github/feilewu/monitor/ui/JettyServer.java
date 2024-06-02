@@ -16,8 +16,7 @@ package com.github.feilewu.monitor.ui;
  * limitations under the License.
  */
 
-import com.github.feilewu.monitor.core.conf.MonitorConf;
-import com.github.feilewu.monitor.core.deploy.master.Master;
+import com.github.feilewu.monitor.core.deploy.master.MasterAction;
 import com.github.feilewu.monitor.core.ui.UIServer;
 import com.github.feilewu.monitor.core.ui.UIServerException;
 import org.eclipse.jetty.server.Server;
@@ -31,6 +30,8 @@ import org.springframework.web.context.support.AnnotationConfigWebApplicationCon
 import org.springframework.web.servlet.DispatcherServlet;
 import scala.Predef;
 
+import javax.servlet.ServletContextEvent;
+
 /**
  * @Author: pf_xu
  * @Date: 2024/5/22 22:35
@@ -38,25 +39,24 @@ import scala.Predef;
  */
 public class JettyServer implements UIServer {
 
-    private Logger logger = LoggerFactory.getLogger(JettyServer.class);
+    private final Logger logger = LoggerFactory.getLogger(JettyServer.class);
 
     private Server server = null;
 
-    private Master master;
+    private AnnotationConfigWebApplicationContext webApplicationContext;
 
-    private MonitorConf conf;
+    private MasterAction action;
 
     private boolean initialized = false;
 
-    private int port = 8080;
+    private int port = 8088;
 
     private String contextPath = "/";
 
-    private String mappingUrl = "/**";
+    private String mappingUrl = "/*";
 
     public JettyServer() {
-        server = new Server();
-        server.setHandler(servletContextHandler(webApplicationContext()));
+        server = new Server(port);
     }
 
     public JettyServer port(int port) {
@@ -65,9 +65,11 @@ public class JettyServer implements UIServer {
     }
 
     @Override
-    public void init(MonitorConf conf, Master master) {
-        this.conf = conf;
-        this.master = master;
+    public void init(MasterAction action) {
+        this.action = action;
+        webApplicationContext = webApplicationContext();
+        server.setHandler(servletContextHandler(webApplicationContext));
+        initialized = true;
     }
 
     public void start() {
@@ -96,14 +98,39 @@ public class JettyServer implements UIServer {
         ServletContextHandler handler = new ServletContextHandler();
         handler.setContextPath(contextPath);
         handler.addServlet(new ServletHolder(new DispatcherServlet(context)), mappingUrl);
-        handler.addEventListener(new ContextLoaderListener(context));
+        handler.addEventListener(new UIContextLoaderListener(this));
         return handler;
     }
 
-    private WebApplicationContext webApplicationContext() {
+    private AnnotationConfigWebApplicationContext webApplicationContext() {
         AnnotationConfigWebApplicationContext context = new AnnotationConfigWebApplicationContext();
         context.register(WebConfiguration.class);
         return context;
+    }
+
+    public static void main(String[] args) throws InterruptedException {
+        JettyServer jettyServer = new JettyServer();
+        jettyServer.init(null);
+        jettyServer.start();
+        jettyServer.join();
+    }
+
+
+    private static class UIContextLoaderListener extends ContextLoaderListener {
+
+        private final JettyServer jettyServer;
+
+        UIContextLoaderListener(JettyServer jettyServer) {
+            super(jettyServer.webApplicationContext);
+            this.jettyServer = jettyServer;
+        }
+
+        @Override
+        public void contextInitialized(ServletContextEvent event) {
+            super.contextInitialized(event);
+            UIContext uiContext = jettyServer.webApplicationContext.getBean(UIContext.class);
+            uiContext.setAction(jettyServer.action);
+        }
     }
 
 

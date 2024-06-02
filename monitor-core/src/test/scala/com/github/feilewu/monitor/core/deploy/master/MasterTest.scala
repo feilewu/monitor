@@ -35,7 +35,7 @@ import com.github.feilewu.monitor.core.ui.UIServer
 
 private class TestUIServer extends UIServer {
 
-  override def init(conf: MonitorConf, master: Master): Unit = {
+  override def init(action: MasterAction): Unit = {
 
   }
 
