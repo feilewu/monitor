@@ -16,19 +16,27 @@
  */
 /**
  * @Author: pf_xu
- * @Date: 2024/5/31 20:25
+ * @Date: 2024/6/2 19:34
  * @email：pfxuchn@gmail.com
  */
-package com.github.feilewu.monitor.core.deploy.master
+package com.github.feilewu.monitor.ui.controller.dto;
 
-import com.github.feilewu.monitor.core.conf.MonitorConf
-import com.github.feilewu.monitor.core.ui.AgentInfoCollection
+public class AgentInfoDTO {
 
-trait MasterAction {
+    private final String host;
 
+    private final String port;
 
-  def monitorConf: MonitorConf
+    public AgentInfoDTO(String host, String port) {
+        this.host = host;
+        this.port = port;
+    }
 
-  def agentInfos: AgentInfoCollection
+    public String getHost() {
+        return host;
+    }
 
+    public String getPort() {
+        return port;
+    }
 }

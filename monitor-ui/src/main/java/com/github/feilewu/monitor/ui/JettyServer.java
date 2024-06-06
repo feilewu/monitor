@@ -30,7 +30,9 @@ import org.springframework.web.context.support.AnnotationConfigWebApplicationCon
 import org.springframework.web.servlet.DispatcherServlet;
 import scala.Predef;
 
+import javax.servlet.DispatcherType;
 import javax.servlet.ServletContextEvent;
+import java.util.EnumSet;
 
 /**
  * @Author: pf_xu
@@ -68,7 +70,11 @@ public class JettyServer implements UIServer {
     public void init(MasterAction action) {
         this.action = action;
         webApplicationContext = webApplicationContext();
-        server.setHandler(servletContextHandler(webApplicationContext));
+        ServletContextHandler contextHandler = servletContextHandler(webApplicationContext);
+        contextHandler.addFilter(EncodingFilter.class, "/*",
+                EnumSet.of(DispatcherType.INCLUDE,DispatcherType.REQUEST));
+        server.setHandler(contextHandler);
+
         initialized = true;
     }
 

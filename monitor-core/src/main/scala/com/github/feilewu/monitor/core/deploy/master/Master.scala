@@ -35,9 +35,9 @@ import com.github.feilewu.monitor.core.deploy.{HeartBeat, RegisterAgent}
 import com.github.feilewu.monitor.core.deploy.agent.AgentRegisterInfo
 import com.github.feilewu.monitor.core.deploy.runtime.V2rayManager
 import com.github.feilewu.monitor.core.log.Logging
-import com.github.feilewu.monitor.core.rpc.{RpcAddress, RpcCallContext, RpcEndpoint, RpcEndpointRef, RpcEnv}
+import com.github.feilewu.monitor.core.rpc._
 import com.github.feilewu.monitor.core.rpc.netty.NettyRpcEnv
-import com.github.feilewu.monitor.core.ui.UIServer
+import com.github.feilewu.monitor.core.ui.{AgentInfo, AgentInfoCollection, UIServer}
 import com.github.feilewu.monitor.core.util.Utils
 
 private[core] class Master(val rpcEnv: RpcEnv) extends RpcEndpoint
@@ -159,6 +159,15 @@ private[core] class Master(val rpcEnv: RpcEnv) extends RpcEndpoint
   }
 
   override def monitorConf: MonitorConf = conf
+
+  override def agentInfos: AgentInfoCollection = {
+    val agentInfoList = addressToAgent.asScala
+      .map {
+        case (address, _) =>
+          AgentInfo(address.host, address.port.toString)
+      }.toList
+    new AgentInfoCollection(agentInfoList)
+  }
 }
 
 private[master] object OnStart

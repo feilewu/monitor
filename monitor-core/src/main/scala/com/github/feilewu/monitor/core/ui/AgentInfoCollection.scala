@@ -16,19 +16,27 @@
  */
 /**
  * @Author: pf_xu
- * @Date: 2024/5/31 20:25
+ * @Date: 2024/6/2 19:09
  * @email：pfxuchn@gmail.com
  */
-package com.github.feilewu.monitor.core.deploy.master
+package com.github.feilewu.monitor.core.ui
 
-import com.github.feilewu.monitor.core.conf.MonitorConf
-import com.github.feilewu.monitor.core.ui.AgentInfoCollection
+class AgentInfoCollection(agents: List[AgentInfo]) extends Iterable[AgentInfo] {
 
-trait MasterAction {
+  override def iterator: Iterator[AgentInfo] = new Iterator[AgentInfo] {
+    private var head: Int = -1
+    private val agentInfoSize = agents.length
 
+    override def hasNext: Boolean = {
+      if (agents == null || agents.isEmpty) {
+        return false
+      }
+      head + 1 < agentInfoSize
+    }
 
-  def monitorConf: MonitorConf
-
-  def agentInfos: AgentInfoCollection
-
+    override def next(): AgentInfo = {
+      head = head + 1
+      agents(head)
+    }
+  }
 }

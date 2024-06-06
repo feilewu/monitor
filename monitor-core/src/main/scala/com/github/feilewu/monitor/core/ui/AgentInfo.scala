@@ -16,19 +16,11 @@
  */
 /**
  * @Author: pf_xu
- * @Date: 2024/5/31 20:25
+ * @Date: 2024/6/2 18:51
  * @email：pfxuchn@gmail.com
  */
-package com.github.feilewu.monitor.core.deploy.master
+package com.github.feilewu.monitor.core.ui
 
-import com.github.feilewu.monitor.core.conf.MonitorConf
-import com.github.feilewu.monitor.core.ui.AgentInfoCollection
+case class AgentInfo(host: String,
+                     port: String)
 
-trait MasterAction {
-
-
-  def monitorConf: MonitorConf
-
-  def agentInfos: AgentInfoCollection
-
-}

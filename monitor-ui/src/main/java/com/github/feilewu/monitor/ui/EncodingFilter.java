@@ -16,19 +16,30 @@
  */
 /**
  * @Author: pf_xu
- * @Date: 2024/5/31 20:25
+ * @Date: 2024/6/3 22:26
  * @email：pfxuchn@gmail.com
  */
-package com.github.feilewu.monitor.core.deploy.master
+package com.github.feilewu.monitor.ui;
 
-import com.github.feilewu.monitor.core.conf.MonitorConf
-import com.github.feilewu.monitor.core.ui.AgentInfoCollection
+import javax.servlet.*;
+import java.io.IOException;
 
-trait MasterAction {
+public class EncodingFilter implements Filter {
+    @Override
+    public void init(FilterConfig filterConfig) throws ServletException {
 
+    }
 
-  def monitorConf: MonitorConf
+    @Override
+    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
+            throws IOException, ServletException {
+        request.setCharacterEncoding("UTF-8");
+        response.setCharacterEncoding("UTF-8");
+        chain.doFilter(request, response);
+    }
 
-  def agentInfos: AgentInfoCollection
+    @Override
+    public void destroy() {
 
+    }
 }
